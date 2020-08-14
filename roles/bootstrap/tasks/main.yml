@@ -18,7 +18,7 @@
     group: "{{ new_admin_user }}"
     path: "/home/{{ new_admin_user }}/.ssh/authorized_keys"
     mode: 0600
-    line: "{{ lookup('file', ssh_pub_key) }}"
+    line: "{{ ssh_pub_key }}"
 - name: Install sudo
   apt:
     name: sudo
