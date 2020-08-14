@@ -1,0 +1,57 @@
+- name: Add admin user
+  user:
+    name: "{{ new_admin_user }}"
+    password: $1$dJqBp2i.$9fT7gap1H/8aa/9A1arQw/
+    update_password: on_create
+    shell: /bin/bash
+- name: Create SSH folder
+  file:
+    path: "/home/{{ new_admin_user }}/.ssh"
+    state: directory
+    mode: 0700
+    owner: "{{ new_admin_user }}"
+    group: "{{ new_admin_user }}"
+- name: Add SSH key to authorized_keys
+  lineinfile:
+    create: yes
+    owner: "{{ new_admin_user }}"
+    group: "{{ new_admin_user }}"
+    path: "/home/{{ new_admin_user }}/.ssh/authorized_keys"
+    mode: 0600
+    line: "{{ lookup('file', ssh_pub_key) }}"
+- name: Install sudo
+  apt:
+    name: sudo
+- name: Add admin user to sudoers file
+  lineinfile:
+    path: /etc/sudoers
+    line: "{{ new_admin_user }} ALL=(ALL:ALL) ALL"
+- name: Disable SSH password authentication & change SSH port
+  blockinfile:
+    path: /etc/ssh/sshd_config
+    block: |
+      PasswordAuthentication no
+      Port 1995
+- name: Restart SSHD
+  service:
+    name: sshd
+    state: restarted
+- name: Set hostname
+  shell: hostnamectl set-hostname {{ hostname }}
+- name: Correct hosts file
+  copy:
+    content: |
+      127.0.0.1 localhost
+      127.0.1.1 {{ domain }} {{ hostname }}
+
+      ::1 localhost ip6-localhost ip6-loopback
+      ff02::1 ip6-allnodes
+      ff02::2 ip6-allrouters
+    dest: /etc/hosts
+    mode: 0644
+- name: Remove root password
+  user:
+    name: root
+    password: !
+- debug:
+    msg: "Delete {{ temp_user }}. Change the admin user's password (right now it's 'Testtest1!') once logged in via SSH."

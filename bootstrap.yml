@@ -1,0 +1,8 @@
+---
+- hosts: main
+  vars:
+    ansible_user: "{{ temp_user }}"
+    ansible_become: yes
+    ansible_become_method: sudo
+  roles:
+    - bootstrap

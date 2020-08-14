@@ -1,0 +1,35 @@
+- name: Install apt related packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+- name: Adding docker gpg key
+  shell: curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+- name: Adding docker repo
+  shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+- name: Apt update
+  apt:
+    update_cache: yes
+- name: Install docker
+  apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+- name: Add docker permissions to admin user
+  user:
+    append: yes
+    groups: docker
+    name: "{{ new_admin_user }}"
+- name: Install docker-compose
+  shell: |
+    curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+- name: Install compose & docker via pip
+  pip:
+    name:
+      - docker
+      - docker-compose

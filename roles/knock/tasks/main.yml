@@ -1,0 +1,64 @@
+- name: Install knockd
+  apt:
+    name: knockd
+    state: present
+- name: Create new knockd configuration
+  copy:
+    dest: /etc/knockd.conf
+    mode: 0644
+    content: |
+      [options]
+      UseSyslog
+      Interface=ens3
+
+      [openMaster]
+      sequence = {{ master_knock_sequence }}
+      seq_timeout = 10
+      start_command = /usr/sbin/ufw allow from %IP%
+      stop_command = /usr/sbin/ufw delete allow from %IP%
+      cmd_timeout = 3600
+      tcpflags = syn
+
+      [openOneTime]
+      sequence = /usr/local/etc/port_seqs
+      seq_timeout = 10
+      start_command = /usr/sbin/ufw allow from %IP%
+      stop_command = /usr/sbin/ufw delete allow from %IP%
+      cmd_timeout = 3600
+      tcpflags = syn
+- name: Add ufw access for knockd
+  lineinfile:
+    path: /lib/systemd/system/knockd.service
+    line: ReadWritePaths=-/etc/ufw/
+- name: Daemon reload
+  systemd:
+    daemon_reload: yes
+- name: Create one time sequence generation script
+  blockinfile:
+    create: yes
+    mode: 700
+    path: /usr/local/sbin/gen_port_seqs
+    block: |
+      #!/bin/sh
+      N_SEQ=35
+      FILE_LOC=/usr/local/etc/port_seqs
+      
+      rm -f $FILE_LOC
+      
+      for i in $(seq 1 $N_SEQ); do
+        echo $(shuf -i 20000-40000 -n 4 | paste -sd "," -) >> $FILE_LOC
+      done
+      
+      chmod 600 $FILE_LOC
+- name: Check if port_seqs exist
+  stat:
+    path: /usr/local/etc/port_seqs
+  register: port_seqs_exist
+- name: Generate port sequences
+  shell: gen_port_seqs
+  when: port_seqs_exist.stat.exists == false
+- name: Enable/start knockd
+  service:
+    name: knockd
+    enabled: yes
+    state: restarted

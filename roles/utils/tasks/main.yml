@@ -1,0 +1,8 @@
+- name: Install utils
+  apt:
+    pkg:
+      - curl
+      - vim
+      - git
+      - htop
+      - python3-pip

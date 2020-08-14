@@ -1,0 +1,33 @@
+- name: Install ufw
+  apt:
+    name: ufw
+    state: present
+- name: Allow SSH
+  ufw:
+    proto: tcp
+    rule: allow
+    direction: in
+    port: "'{{ new_ssh_port }}'"
+- name: Allow port 80 for certbot renewals
+  ufw:
+    proto: tcp
+    rule: allow
+    direction: in
+    port: "80"
+- name: Allow my home ip
+  ufw:
+    proto: any
+    rule: allow
+    direction: in
+    from: "{{ my_home_ip }}"
+- name: Deny default incoming
+  ufw:
+    direction: incoming
+    default: deny
+- name: Allow default outgoing
+  ufw:
+    direction: outgoing
+    default: allow
+- name: Enable UFW
+  ufw:
+    state: enabled

@@ -1,0 +1,28 @@
+- name: Install nginx
+  apt:
+    name: nginx
+- name: Deactivate default site
+  file:
+    name: /etc/nginx/sites-enabled/default
+    state: absent
+- name: Add common ssl configuration
+  template:
+    src: ../files/common-ssl.conf
+    dest: /etc/nginx/common-ssl.conf
+    mode: 644
+- name: Add certbot deploy hook for reloading nginx 
+  blockinfile:
+    create: yes
+    path: /etc/letsencrypt/renewal-hooks/deploy/nginx.sh
+    block: |
+      #!/bin/sh
+      systemctl reload nginx
+    mode: 0744
+- name: Enable nginx
+  service:
+    name: nginx
+    enabled: yes
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted

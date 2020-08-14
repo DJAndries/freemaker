@@ -1,0 +1,30 @@
+- name: Create nextcloud compose folder
+  file:
+    owner: "{{ new_admin_user }}"
+    group: "{{ new_admin_user }}"
+    path: ./nextcloud-compose
+    state: directory
+- name: Copy compose file
+  template:
+    owner: "{{ new_admin_user }}"
+    group: "{{ new_admin_user }}"
+    src: ../files/docker-compose.yml
+    dest: ./nextcloud-compose/docker-compose.yml
+- name: Nextcloud up
+  docker_compose:
+    project_src: ./nextcloud-compose
+    state: present
+- name: Add nextcloud nginx site
+  copy:
+    src: ../files/nextcloud-nginx.conf
+    dest: /etc/nginx/sites-available/nextcloud
+    mode: 0644
+- name: Enable nextcloud nginx site
+  file:
+    src: /etc/nginx/sites-available/nextcloud
+    dest: /etc/nginx/sites-enabled/nextcloud
+    state: link
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded

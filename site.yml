@@ -1,0 +1,53 @@
+---
+- hosts: main
+  vars:
+    ansible_user: "{{ new_admin_user }}"
+    ansible_port: "{{ new_ssh_port }}"
+    ansible_become: yes
+  roles:
+    # Install basic utils
+    - role: utils
+      tags:
+        - utils
+    # Install UFW firewall
+    - role: ufw
+      tags:
+        - ufw
+    # Install mail server
+    - role: emailwiz
+      tags:
+        - mail
+    # Install mail backup scripts
+    - role: mail-backup
+      tags:
+        - backup
+        - mail-backup
+    # Install fail2ban for imap/smtp
+    - role: fail2ban
+      tags:
+        - fail2ban
+    # Install mailgun relay
+    - role: mailgun-relay
+      tags:
+        - mailgun
+    # Add knockd
+    - role: knock
+      tags:
+        - knock
+    # Install docker
+    - role: docker
+      tags:
+        - docker
+    # Install nginx
+    - role: nginx
+      tags:
+        - nginx
+    # Bring up nextcloud
+    - role: nextcloud
+      tags:
+        - nextcloud
+    # Nextcloud backup scripts
+    - role: nextcloud-backup
+      tags:
+        - backup
+        - nextcloud-backup

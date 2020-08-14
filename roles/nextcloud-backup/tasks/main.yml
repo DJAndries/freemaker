@@ -1,0 +1,44 @@
+- name: Create nextcloud backup script
+  copy:
+    dest: /usr/local/sbin/nextcloud_backup
+    mode: 0700
+    content: |
+      #!/bin/sh
+      set -e
+      
+      nextcloud_data=nextcloud-data-backup-$(date '+%Y-%m-%d-%H-%M').tar.gz
+      nextcloud_db_data=nextcloud-db-backup-$(date '+%Y-%m-%d-%H-%M').dump
+
+      docker run --rm --volumes-from nextcloud -v $(pwd):/backup nextcloud \
+        bash -c "cd /var/www/html && tar cvzf /backup/$nextcloud_data ./data/ ./config/ ./theme/ ./apps/ --ignore-failed-read"
+
+      (docker exec -it nextcloud_db mysqldump --single-transaction -h db -u nextcloud -pNextCloud1! nextcloud) > $nextcloud_db_data
+
+      if [ -n "$SUDO_USER" ]; then
+        chown $SUDO_USER:$SUDO_USER $nextcloud_data
+        chown $SUDO_USER:$SUDO_USER $nextcloud_db_data
+      fi
+
+      chmod 700 $nextcloud_db_data
+      chmod 700 $nextcloud_data
+
+      echo "Nextcloud backed up to $nextcloud_data and $nextcloud_db_data"
+- name: Create nextcloud restore script
+  copy:
+    dest: /usr/local/sbin/nextcloud_restore
+    mode: 0700
+    content: |
+      #!/bin/sh
+      set -e
+
+      if [ "$#" -lt 2 ]; then
+        echo "usage: nextcloud_restore <file/config data tarball> <sql dump>"
+        exit 1
+      fi
+      
+      docker run --rm --volumes-from nextcloud -v $(realpath $1):/backup/backup.tar.gz nextcloud \
+        bash -c "cd /var/www/html && tar xvzf /backup/backup.tar.gz"
+
+      (docker exec -i nextcloud_db mysql -h db -u nextcloud -pNextCloud1! nextcloud) < $2
+
+      echo "Nextcloud restored"

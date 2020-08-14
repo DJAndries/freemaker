@@ -1,0 +1,30 @@
+- name: check if SASL password file exists
+  stat:
+    path: /etc/postfix/sasl_passwd
+  register: sasl_exists
+- name: Add SASL password file entries for virtual aliases
+  when: sasl_exists.stat.exists == false
+  lineinfile:
+    mode: 0600
+    create: yes
+    path: /etc/postfix/sasl_passwd
+    line: "@{{ item }} user@{{ item }}:place_smtp_password_here"
+  loop: "{{ virtual_alias_domains }}"
+- name: Add SASL password file default credentials 
+  when: sasl_exists.stat.exists == false
+  lineinfile:
+    mode: 0600
+    create: yes
+    path: /etc/postfix/sasl_passwd
+    line: "[smtp.mailgun.org]:587 user@{{ main_dest_domain }}:place_smtp_password_here"
+- name: Postmap the SASL password file
+  shell: postmap /etc/postfix/sasl_passwd
+- name: Add relay related configuration to main.cf 
+  shell: |
+    postconf -e 'relayhost = [smtp.mailgun.org]:587'
+    postconf -e 'smtp_sasl_auth_enable = yes'
+    postconf -e 'smtp_sasl_security_options = noanonymous'
+    postconf -e 'smtp_sasl_tls_security_options = noanonymous'
+    postconf -e 'smtp_sasl_mechanism_filter = AUTH LOGIN'
+    postconf -e 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd'
+    postconf -e 'smtp_sender_dependent_authentication = yes'

@@ -1,0 +1,35 @@
+- name: Create backup script
+  copy:
+    content: |
+      #!/bin/sh
+      set -e
+      
+      backup_file=$(pwd)/mail_backup_$(date +%Y-%m-%d-%H-%M).tar.gz
+      
+      (cd /home && tar czpf $backup_file ./**/Mail)
+
+      if [ -n "$SUDO_USER" ]; then
+        chown $SUDO_USER:$SUDO_USER $backup_file
+      fi
+
+      chmod 600 $backup_file
+
+      echo "Mail backed up to $backup_file"
+    dest: /usr/local/sbin/mail_backup
+    mode: 0700
+- name: Create restore script
+  copy:
+    content: |
+      #!/bin/sh
+      set -e
+
+      if [ "$#" -lt 1 ]; then
+        echo "usage: mail_restore <tarball>"
+        exit 1
+      fi
+      
+      tar xzf $1 -C /home
+
+      echo "Mail restored"
+    dest: /usr/local/sbin/mail_restore
+    mode: 0700

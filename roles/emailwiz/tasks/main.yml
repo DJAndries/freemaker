@@ -1,0 +1,78 @@
+- name: Install certbot
+  apt:
+    pkg:
+      - certbot
+- name: Check for existing certs
+  stat:
+    path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+  register: cert_stat_result
+- name: Generate certificates
+  command: "certbot certonly --standalone -d {{ domain }} -n --agree-tos --email {{ cert_email }}"
+  when: not cert_stat_result.stat.exists
+- name: Add certbot deploy hook for reloading mail servers
+  blockinfile:
+    create: yes
+    path: /etc/letsencrypt/renewal-hooks/deploy/mail.sh
+    block: |
+      #!/bin/sh
+      systemctl reload postfix
+      systemctl reload dovecot
+    mode: 0744
+- name: Clone emailwiz
+  become: yes
+  become_user: "{{ ansible_user }}"
+  git:
+    repo: 'https://github.com/djandries/emailwiz'
+    dest: ~/emailwiz
+    version: ansible-noninteractive
+- name: Check if postfix installed
+  shell: "(dpkg-query -s 'postfix' | grep 'install ok installed') || true"
+  register: postfix_check_result
+- name: Run emailwiz
+  shell: "./emailwiz/emailwiz.sh"
+  register: emailwiz_result
+  when: postfix_check_result.stdout == ""
+- name: Enable spamassassin
+  service:
+    name: spamassassin
+    enabled: yes
+- name: Create virtual alias file
+  lineinfile:
+    mode: 0644
+    create: yes
+    path: /etc/postfix/virtual
+    line: "{{ item }}"
+  loop: "{{ virtual_aliases }}"
+  when: virtual_alias_domains is defined and virtual_aliases is defined
+- name: Create virtual alias file postmap
+  when: virtual_alias_domains is defined and virtual_aliases is defined
+  shell: postmap /etc/postfix/virtual
+- name: Add virtual alias to postmap configuration
+  shell: |
+    postconf -e 'virtual_alias_domains = {{ virtual_alias_domains | join(' ') }}'
+    postconf -e 'virtual_alias_maps = hash:/etc/postfix/virtual'
+    postconf -e 'mydestination = $myhostname, localhost, localhost.{{ main_dest_domain }}, {{ main_dest_domain }}{{ virtual_alias_domains is defined | ternary(", " + (virtual_alias_domains | join(", ")),"") }}'
+  when: virtual_alias_domains is defined and virtual_aliases is defined
+- name: Restart postfix
+  when: virtual_alias_domains is defined and virtual_aliases is defined
+  service:
+    name: postfix
+    state: restarted
+- name: Allow SMTP
+  ufw:
+    proto: tcp
+    rule: allow
+    direction: in
+    port: '25'
+- name: Create mail user
+  user:
+    name: "{{ item }}"
+    state: present
+    password: $1$dJqBp2i.$9fT7gap1H/8aa/9A1arQw/
+    groups: mail
+    update_password: on_create
+    shell: /usr/bin/false
+  loop: "{{ mail_users }}"
+
+- debug:
+    var: emailwiz_result.stdout_lines

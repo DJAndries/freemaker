@@ -1,0 +1,26 @@
+- name: Install fail2ban
+  apt:
+    name: fail2ban
+- name: Enable dovecot jail
+  replace:
+    replace: '[dovecot]\nenabled = true\n'
+    regexp: '\[dovecot\]\n(?!enabled = true)'
+    path: /etc/fail2ban/jail.conf
+- name: Enable postfix jail
+  replace:
+    replace: '[postfix-sasl]\nenabled = true\n'
+    regexp: '\[postfix-sasl\]\n(?!enabled = true)'
+    path: /etc/fail2ban/jail.conf
+- name: Set ban time
+  lineinfile:
+    regex: '^bantime  = 10m'
+    line: bantime  = 7d
+    path: /etc/fail2ban/jail.conf
+- name: Enable fail2ban
+  service:
+    name: fail2ban
+    enabled: yes
+- name: Restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted
