@@ -1,2 +1,1 @@
 - review ssl config
-- find way to configure in mailgun credentials

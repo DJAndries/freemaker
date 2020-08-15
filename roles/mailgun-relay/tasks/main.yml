@@ -8,7 +8,7 @@
     mode: 0600
     create: yes
     path: /etc/postfix/sasl_passwd
-    line: "@{{ item }} user@{{ item }}:place_smtp_password_here"
+    line: "@{{ item }} {{ mailgun_smtp_creds[item].login }}:{{ mailgun_smtp_creds[item].password }}"
   loop: "{{ virtual_alias_domains }}"
 - name: Add SASL password file default credentials 
   when: sasl_exists.stat.exists == false
@@ -16,7 +16,7 @@
     mode: 0600
     create: yes
     path: /etc/postfix/sasl_passwd
-    line: "[smtp.mailgun.org]:587 user@{{ main_dest_domain }}:place_smtp_password_here"
+    line: "[smtp.mailgun.org]:587 {{ mailgun_smtp_creds[main_dest_domain].login }}:{{ mailgun_smtp_creds[main_dest_domain].password }}"
 - name: Postmap the SASL password file
   shell: postmap /etc/postfix/sasl_passwd
 - name: Add relay related configuration to main.cf 

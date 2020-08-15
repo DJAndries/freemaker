@@ -2,7 +2,9 @@
 - hosts: main
   vars:
     ansible_user: "{{ temp_user }}"
+    ansible_password: "{{ temp_install_pass }}"
+    ansible_become_pass: "{{ temp_install_pass }}"
     ansible_become: yes
-    ansible_become_method: sudo
+    ansible_become_method: su
   roles:
     - bootstrap

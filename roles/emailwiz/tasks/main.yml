@@ -64,15 +64,20 @@
     rule: allow
     direction: in
     port: '25'
+- name: Generating password hashes
+  shell:
+    cmd: openssl passwd -1 -stdin
+    stdin: "{{ mail_user_passwords[item] }}"
+  loop: "{{ mail_users }}"
+  register: email_pwd_hashes
 - name: Create mail user
   user:
     name: "{{ item }}"
     state: present
-    password: $1$dJqBp2i.$9fT7gap1H/8aa/9A1arQw/
+    password: "{{ email_pwd_hashes.results[loop_i].stdout }}"
     groups: mail
     update_password: on_create
     shell: /usr/bin/false
   loop: "{{ mail_users }}"
-
-- debug:
-    var: emailwiz_result.stdout_lines
+  loop_control:
+    index_var: loop_i

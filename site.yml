@@ -4,6 +4,7 @@
     ansible_user: "{{ new_admin_user }}"
     ansible_port: "{{ new_ssh_port }}"
     ansible_become: yes
+    ansible_become_pass: "{{ new_admin_pass }}"
   roles:
     # Install basic utils
     - role: utils
@@ -51,3 +52,16 @@
       tags:
         - backup
         - nextcloud-backup
+  post_tasks:
+    - name: Get contents of dns_emailwizard
+      tags:
+        - main
+      shell:
+        cmd: cat /root/dns_emailwizard
+      register: dns_emailwizard_content
+    - name: Note these mail DNS records
+      tags:
+        - main
+      debug:
+        msg: "{{ dict(['record_name', 'record_type', 'value'] | zip(item.split('\t'))) }}"
+      loop: "{{ dns_emailwizard_content.stdout.split('\n') }}"

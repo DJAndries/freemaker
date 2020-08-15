@@ -6,3 +6,8 @@
       - git
       - htop
       - python3-pip
+- name: Remove temp user
+  user:
+    name: "{{ temp_user }}"
+    state: absent
+    remove: yes

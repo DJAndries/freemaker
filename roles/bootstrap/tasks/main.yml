@@ -1,7 +1,12 @@
+- name: Generate password hash
+  shell:
+    cmd: openssl passwd -1 -stdin
+    stdin: "{{ new_admin_pass }}"
+  register: admin_pwd_hash
 - name: Add admin user
   user:
     name: "{{ new_admin_user }}"
-    password: $1$dJqBp2i.$9fT7gap1H/8aa/9A1arQw/
+    password: "{{ admin_pwd_hash.stdout }}"
     update_password: on_create
     shell: /bin/bash
 - name: Create SSH folder
@@ -53,5 +58,3 @@
   user:
     name: root
     password: !
-- debug:
-    msg: "Delete {{ temp_user }}. Change the admin user's password (right now it's 'Testtest1!') once logged in via SSH."
