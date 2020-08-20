@@ -36,7 +36,7 @@
 - name: Create one time sequence generation script
   blockinfile:
     create: yes
-    mode: 700
+    mode: 0700
     path: /usr/local/sbin/gen_port_seqs
     block: |
       #!/bin/sh

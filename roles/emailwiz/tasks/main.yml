@@ -70,6 +70,7 @@
     stdin: "{{ mail_user_passwords[item] }}"
   loop: "{{ mail_users }}"
   register: email_pwd_hashes
+  no_log: true
 - name: Create mail user
   user:
     name: "{{ item }}"
@@ -81,3 +82,4 @@
   loop: "{{ mail_users }}"
   loop_control:
     index_var: loop_i
+  no_log: true

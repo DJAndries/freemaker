@@ -3,12 +3,14 @@
     cmd: openssl passwd -1 -stdin
     stdin: "{{ new_admin_pass }}"
   register: admin_pwd_hash
+  no_log: true
 - name: Add admin user
   user:
     name: "{{ new_admin_user }}"
     password: "{{ admin_pwd_hash.stdout }}"
     update_password: on_create
     shell: /bin/bash
+  no_log: true
 - name: Create SSH folder
   file:
     path: "/home/{{ new_admin_user }}/.ssh"
@@ -16,6 +18,7 @@
     mode: 0700
     owner: "{{ new_admin_user }}"
     group: "{{ new_admin_user }}"
+  no_log: true
 - name: Add SSH key to authorized_keys
   lineinfile:
     create: yes
@@ -24,6 +27,7 @@
     path: "/home/{{ new_admin_user }}/.ssh/authorized_keys"
     mode: 0600
     line: "{{ ssh_pub_key }}"
+  no_log: true
 - name: Install sudo
   apt:
     name: sudo
@@ -31,6 +35,7 @@
   lineinfile:
     path: /etc/sudoers
     line: "{{ new_admin_user }} ALL=(ALL:ALL) ALL"
+  no_log: true
 - name: Disable SSH password authentication & change SSH port
   blockinfile:
     path: /etc/ssh/sshd_config

@@ -1,2 +1,4 @@
-inventory
+inventory/*.yml
+!inventory/*.yml.example
 preseeder/out
+preseeder/in

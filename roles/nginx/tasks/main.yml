@@ -9,7 +9,7 @@
   template:
     src: ../files/common-ssl.conf
     dest: /etc/nginx/common-ssl.conf
-    mode: 644
+    mode: 0644
 - name: Add certbot deploy hook for reloading nginx 
   blockinfile:
     create: yes

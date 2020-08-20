@@ -1,0 +1,41 @@
+main:
+  hosts:
+    subdom.yourhost.com:
+      domain: subdom.yourhost.com
+      main_dest_domain: yourhost.com
+      hostname: subdom
+  vars:
+    # Contact email for LetsEncrypt for SSL certificate related messages
+    cert_email: yourname@yourhost.ca
+    # The contents of your SSH public key go here (usually in ~/.ssh/id_rsa.pub)
+    ssh_pub_key: 
+    # Low-priv user account on the Debian instance.
+    # This account will be deleted after creating the admin account
+    temp_user: tempuser
+    # Name of the new admin account to be created
+    new_admin_user: admin
+    ansible_python_interpreter: /usr/bin/python3
+    # Custom SSH port. 
+    new_ssh_port: 5132
+    # Your home IP address. This will be 'permanently' whitelisted in UFW
+    my_home_ip: 20.20.20.20
+    # Names of the mail user accounts to be created
+    mail_users:
+      - you
+
+    # Enable the following setting for configuring any additional domains
+    #
+    # virtual_alias_domains:
+    #   - yourseconddomain.com
+
+    # Enable the following setting for mapping any email addresses to user accounts.
+    # This is usually configured for any email addresses associated with additional domains.
+    #
+    # virtual_aliases:
+    #   - you@yourseconddomain.com you
+    
+    # Master knock sequence to be used to whitelist an origin IP for one hour.
+    # Using the one-time sequences are recommended to prevent attackers from sniffing packets to acquire the sequence.
+    # Rule of thumb: Use this when the one-time sequences fail
+    master_knock_sequence: 20001,20002,20003
+

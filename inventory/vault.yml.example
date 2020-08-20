@@ -1,0 +1,26 @@
+main:
+  vars:
+
+    # Grab some Mailgun SMTP credentials and plug them in here
+    mailgun_smtp_creds:
+      yourdomain.com:
+        login: you@yourdomain.com
+        password: YourMailGunSmtpPassword
+      # additionaldomain.com:
+      #   login: you@additionaldomain.xyz
+      #   password: password
+
+    # Password of the temporary user
+    temp_install_pass: Testtest1!
+
+    # Password of the admin user to be created
+    new_admin_pass: EnterSecurePasswordHere
+
+    # SMTP/IMAP passwords for mail accounts
+    mail_user_passwords:
+      darnell: EnterSecurePasswordHere
+
+    # Password of temporary LVM encryption password, provided during installation
+    temp_crypto_password: Testtest1!
+    # New password for LVM encryption
+    new_crypto_password: EnterSecurePasswordHere

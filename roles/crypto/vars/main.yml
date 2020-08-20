@@ -1,0 +1,2 @@
+crypto_state_file: /usr/local/etc/crypto_state
+tmp_crypto: /tmp/crypto.tmp

@@ -1,0 +1,37 @@
+# "crypto state" is a file containing a sha256 hash of the new crypto password
+# it is used to determine when to change the encryption passphrase
+- name: Check existing crypto state
+  shell:
+    cmd: "cat {{ crypto_state_file }} || true"
+  register: crypto_state
+  no_log: true
+- name: Hash crypto password
+  shell:
+    cmd: sha256sum
+    stdin: "{{ new_crypto_password }}"
+  register: crypto_hash
+  no_log: true
+- name: Create temporary crypto file
+  shell: |
+    echo -n '{{ new_crypto_password }}' > {{ tmp_crypto }}
+    chmod 600 {{ tmp_crypto }}
+  when: crypto_state.stdout != crypto_hash.stdout
+  no_log: true
+- name: Change crypto password
+  shell: |
+    echo -n '{{ temp_crypto_password }}' | cryptsetup luksChangeKey --key-file - \
+      /dev/disk/by-uuid/$(cat /etc/crypttab | sed -e "s|\(.*\) UUID=\(.*\) none.*|\2|g") \
+      {{ tmp_crypto }}
+  when: crypto_state.stdout != crypto_hash.stdout
+  no_log: true
+- name: Store crypto state
+  shell: |
+    echo '{{ crypto_hash.stdout }}' > {{ crypto_state_file }}
+    chmod 600 {{ crypto_state_file }}
+  when: crypto_state.stdout != crypto_hash.stdout
+  no_log: true
+- name: Delete temporary crypto file
+  file:
+    path: "{{ tmp_crypto }}"
+    state: absent
+  no_log: true

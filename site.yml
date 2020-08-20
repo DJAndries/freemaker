@@ -10,6 +10,10 @@
     - role: utils
       tags:
         - utils
+    # Setup crypto password
+    - role: crypto
+      tags:
+        - crypto
     # Install UFW firewall
     - role: ufw
       tags:
@@ -53,6 +57,11 @@
         - backup
         - nextcloud-backup
   post_tasks:
+    - name: Remove temp user
+      user:
+        name: "{{ temp_user }}"
+        state: absent
+        remove: yes
     - name: Get contents of dns_emailwizard
       tags:
         - main
