@@ -41,7 +41,7 @@
     path: /etc/ssh/sshd_config
     block: |
       PasswordAuthentication no
-      Port 1995
+      Port "{{ new_ssh_port }}"
 - name: Restart SSHD
   service:
     name: sshd
